@@ -1,0 +1,45 @@
+#implement the Y86 assembly code based on the given c code
+#
+#
+#
+#Program start
+.pos 0x0
+irmovl Stack,%esp
+irmovl Stack,%ebp
+irmovl ele1,%edx
+pushl %edx
+call sum_list
+# Sample linked list
+.align 4
+ele1:
+.long 0x00a
+.long ele2
+ele2:
+.long 0x0b0
+.long ele3
+ele3:
+.long 0xc00
+.long 0
+#function
+sum_list:
+    pushl %ebp
+    rrmovl %esp,%ebp
+    xorl %eax,%eax
+    mrmovl 8(%ebp),%edx
+    andl %edx,%edx
+    je END
+LOOP:
+    mrmovl (%edx),%esi
+    addl %esi,%eax
+    mrmovl 4(%edx),%edx
+    andl %edx,%edx
+    jne LOOP
+END:
+    rrmovl %ebp,%esp
+    popl %ebp
+    ret
+.pos 0x300   #stack starts here
+Stack:
+
+
+
