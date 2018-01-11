@@ -22,65 +22,71 @@ int gen_instr_valid()
       (I_RRMOVL) || (icode) == (I_IRMOVL) || (icode) == (I_RMMOVL) || 
       (icode) == (I_MRMOVL) || (icode) == (I_ALU) || (icode) == (I_JMP) || 
       (icode) == (I_CALL) || (icode) == (I_RET) || (icode) == (I_PUSHL) || 
-      (icode) == (I_POPL));
+      (icode) == (I_POPL) || (icode) == (I_IADDL) || (icode) == (I_LEAVE));
 }
 
 int gen_need_regids()
 {
     return ((icode) == (I_RRMOVL) || (icode) == (I_ALU) || (icode) == 
       (I_PUSHL) || (icode) == (I_POPL) || (icode) == (I_IRMOVL) || (icode)
-       == (I_RMMOVL) || (icode) == (I_MRMOVL));
+       == (I_RMMOVL) || (icode) == (I_MRMOVL) || (icode) == (I_IADDL));
 }
 
 int gen_need_valC()
 {
     return ((icode) == (I_IRMOVL) || (icode) == (I_RMMOVL) || (icode) == 
-      (I_MRMOVL) || (icode) == (I_JMP) || (icode) == (I_CALL));
+      (I_MRMOVL) || (icode) == (I_JMP) || (icode) == (I_CALL) || (icode)
+       == (I_IADDL));
 }
 
 int gen_srcA()
 {
     return (((icode) == (I_RRMOVL) || (icode) == (I_RMMOVL) || (icode) == 
         (I_ALU) || (icode) == (I_PUSHL)) ? (ra) : ((icode) == (I_POPL) || 
-        (icode) == (I_RET)) ? (REG_ESP) : (REG_NONE));
+        (icode) == (I_RET)) ? (REG_ESP) : ((icode) == (I_LEAVE)) ? 
+      (REG_EBP) : (REG_NONE));
 }
 
 int gen_srcB()
 {
     return (((icode) == (I_ALU) || (icode) == (I_RMMOVL) || (icode) == 
-        (I_MRMOVL)) ? (rb) : ((icode) == (I_PUSHL) || (icode) == (I_POPL)
-         || (icode) == (I_CALL) || (icode) == (I_RET)) ? (REG_ESP) : 
+        (I_MRMOVL) || (icode) == (I_IADDL)) ? (rb) : ((icode) == (I_PUSHL)
+         || (icode) == (I_POPL) || (icode) == (I_CALL) || (icode) == 
+        (I_RET)) ? (REG_ESP) : ((icode) == (I_LEAVE)) ? (REG_EBP) : 
       (REG_NONE));
 }
 
 int gen_dstE()
 {
     return ((((icode) == (I_RRMOVL)) & (cond)) ? (rb) : ((icode) == 
-        (I_IRMOVL) || (icode) == (I_ALU)) ? (rb) : ((icode) == (I_PUSHL)
-         || (icode) == (I_POPL) || (icode) == (I_CALL) || (icode) == 
-        (I_RET)) ? (REG_ESP) : (REG_NONE));
+        (I_IRMOVL) || (icode) == (I_ALU) || (icode) == (I_IADDL)) ? (rb) : 
+      ((icode) == (I_PUSHL) || (icode) == (I_POPL) || (icode) == (I_CALL)
+         || (icode) == (I_RET) || (icode) == (I_LEAVE)) ? (REG_ESP) : 
+      (REG_NONE));
 }
 
 int gen_dstM()
 {
-    return (((icode) == (I_MRMOVL) || (icode) == (I_POPL)) ? (ra) : 
-      (REG_NONE));
+    return (((icode) == (I_MRMOVL) || (icode) == (I_POPL)) ? (ra) : (
+        (icode) == (I_LEAVE)) ? (REG_EBP) : (REG_NONE));
 }
 
 int gen_aluA()
 {
     return (((icode) == (I_RRMOVL) || (icode) == (I_ALU)) ? (vala) : (
         (icode) == (I_IRMOVL) || (icode) == (I_RMMOVL) || (icode) == 
-        (I_MRMOVL)) ? (valc) : ((icode) == (I_CALL) || (icode) == (I_PUSHL)
-        ) ? -4 : ((icode) == (I_RET) || (icode) == (I_POPL)) ? 4 : 0);
+        (I_MRMOVL) || (icode) == (I_IADDL)) ? (valc) : ((icode) == (I_CALL)
+         || (icode) == (I_PUSHL)) ? -4 : ((icode) == (I_RET) || (icode) == 
+        (I_POPL) || (icode) == (I_LEAVE)) ? 4 : 0);
 }
 
 int gen_aluB()
 {
     return (((icode) == (I_RMMOVL) || (icode) == (I_MRMOVL) || (icode) == 
         (I_ALU) || (icode) == (I_CALL) || (icode) == (I_PUSHL) || (icode)
-         == (I_RET) || (icode) == (I_POPL)) ? (valb) : ((icode) == 
-        (I_RRMOVL) || (icode) == (I_IRMOVL)) ? 0 : 0);
+         == (I_RET) || (icode) == (I_POPL) || (icode) == (I_IADDL) || 
+        (icode) == (I_LEAVE)) ? (valb) : ((icode) == (I_RRMOVL) || (icode)
+         == (I_IRMOVL)) ? 0 : 0);
 }
 
 int gen_alufun()
@@ -90,13 +96,13 @@ int gen_alufun()
 
 int gen_set_cc()
 {
-    return ((icode) == (I_ALU));
+    return ((icode) == (I_ALU) || (icode) == (I_IADDL));
 }
 
 int gen_mem_read()
 {
     return ((icode) == (I_MRMOVL) || (icode) == (I_POPL) || (icode) == 
-      (I_RET));
+      (I_RET) || (icode) == (I_LEAVE));
 }
 
 int gen_mem_write()
@@ -109,7 +115,7 @@ int gen_mem_addr()
 {
     return (((icode) == (I_RMMOVL) || (icode) == (I_PUSHL) || (icode) == 
         (I_CALL) || (icode) == (I_MRMOVL)) ? (vale) : ((icode) == (I_POPL)
-         || (icode) == (I_RET)) ? (vala) : 0);
+         || (icode) == (I_RET) || (icode) == (I_LEAVE)) ? (vala) : 0);
 }
 
 int gen_mem_data()

@@ -1,30 +1,39 @@
 # Modify this line to indicate the default version
 
-VERSION=std
+VERSION=full
 
 # Comment this out if you don't have Tcl/Tk on your system
 
-GUIMODE=-DHAS_GUI
+#GUIMODE=-DHAS_GUI -DUSE_INTERP_RESULT
 
 # Modify the following line so that gcc can find the libtcl.so and
 # libtk.so libraries on your system. You may need to use the -L option
 # to tell gcc which directory to look in. Comment this out if you
 # don't have Tcl/Tk.
 
+<<<<<<< HEAD
 # Modify the following line so that gcc can find the libtcl.so and
 # libtk.so libraries on your system. You may need to use the -L option
 # to tell gcc which directory to look in. Comment this out if you
 # don't have Tcl/Tk.
 
 TKLIBS=-L/usr/lib -ltk8.5 -ltcl8.5
+=======
+TKLIBS=-L/usr/lib -ltk8.6 -ltcl8.6
+>>>>>>> 88c86736547f5ef90cb46ec9534a0259e1303750
 
 # Modify the following line so that gcc can find the tcl.h and tk.h
 # header files on your system. Comment this out if you don't have
 # Tcl/Tk.
 
+<<<<<<< HEAD
 #TKINC=-isystem /usr/include /usr/include/tcl8.5/tk.h /usr/include/tcl8.5/tcl.h
 TKINC=-I/usr/include/tcl8.5/
 ##################################################
+=======
+TKINC=-isystem /usr/include/tk
+
+>>>>>>> 88c86736547f5ef90cb46ec9534a0259e1303750
 # Modify these two lines to choose your compiler and compile time
 # flags.
 

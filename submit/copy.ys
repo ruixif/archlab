@@ -1,0 +1,78 @@
+#copy block ys code
+.pos 0x0
+irmovl Stack,%esp
+irmovl Stack,%ebp
+irmovl $3,%edx
+pushl %edx
+irmovl dest,%edx
+pushl %edx
+irmovl src,%edx
+pushl %edx
+call copy
+halt
+
+
+#data block
+.align 4
+src:
+    .long 0x00a
+    .long 0x0b0
+    .long 0xc00
+# Destination
+dest:
+    .long 0x111
+    .long 0x222
+    .long 0x333
+
+#function
+copy:
+    pushl %ebp
+    rrmovl %esp,%ebp   
+    mrmovl 8(%ebp),%ebx    #src
+    mrmovl 12(%ebp),%esi   #dest
+    mrmovl 16(%ebp),%edi   #edi=3
+    xorl   %eax,%eax       #eax=0
+    andl   %edi,%edi
+    je END
+LOOP:
+    mrmovl (%ebx),%edx
+    rmmovl %edx,(%esi)
+    xorl %edx,%eax
+    irmovl $4,%edx
+    addl %edx,%ebx
+    addl %edx,%esi
+    irmovl $1,%edx
+    subl %edx,%edi
+    andl %edi,%edi
+    #halt
+    jne LOOP
+END:
+    rrmovl %ebp,%esp
+    popl %ebp
+    ret
+    
+
+
+.pos 0x300   #stack starts here
+Stack:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
