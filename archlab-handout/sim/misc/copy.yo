@@ -1,0 +1,78 @@
+                      | #copy block ys code
+  0x000:              | .pos 0x0
+  0x000: 30f400030000 | irmovl Stack,%esp
+  0x006: 30f500030000 | irmovl Stack,%ebp
+  0x00c: 30f203000000 | irmovl $3,%edx
+  0x012: a02f         | pushl %edx
+  0x014: 30f238000000 | irmovl dest,%edx
+  0x01a: a02f         | pushl %edx
+  0x01c: 30f22c000000 | irmovl src,%edx
+  0x022: a02f         | pushl %edx
+  0x024: 8044000000   | call copy
+  0x029: 00           | halt
+                      | 
+                      | 
+                      | #data block
+  0x02c:              | .align 4
+  0x02c:              | src:
+  0x02c: 0a000000     |     .long 0x00a
+  0x030: b0000000     |     .long 0x0b0
+  0x034: 000c0000     |     .long 0xc00
+                      | # Destination
+  0x038:              | dest:
+  0x038: 11010000     |     .long 0x111
+  0x03c: 22020000     |     .long 0x222
+  0x040: 33030000     |     .long 0x333
+                      | 
+                      | #function
+  0x044:              | copy:
+  0x044: a05f         |     pushl %ebp
+  0x046: 2045         |     rrmovl %esp,%ebp   
+  0x048: 503508000000 |     mrmovl 8(%ebp),%ebx    #src
+  0x04e: 50650c000000 |     mrmovl 12(%ebp),%esi   #dest
+  0x054: 507510000000 |     mrmovl 16(%ebp),%edi   #edi=3
+  0x05a: 6300         |     xorl   %eax,%eax       #eax=0
+  0x05c: 6277         |     andl   %edi,%edi
+  0x05e: 738a000000   |     je END
+  0x063:              | LOOP:
+  0x063: 502300000000 |     mrmovl (%ebx),%edx
+  0x069: 402600000000 |     rmmovl %edx,(%esi)
+  0x06f: 6320         |     xorl %edx,%eax
+  0x071: 30f204000000 |     irmovl $4,%edx
+  0x077: 6023         |     addl %edx,%ebx
+  0x079: 6026         |     addl %edx,%esi
+  0x07b: 30f201000000 |     irmovl $1,%edx
+  0x081: 6127         |     subl %edx,%edi
+  0x083: 6277         |     andl %edi,%edi
+                      |     #halt
+  0x085: 7463000000   |     jne LOOP
+  0x08a:              | END:
+  0x08a: 2054         |     rrmovl %ebp,%esp
+  0x08c: b05f         |     popl %ebp
+  0x08e: 90           |     ret
+                      |     
+                      | 
+                      | 
+  0x300:              | .pos 0x300   #stack starts here
+  0x300:              | Stack:
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 
+                      | 

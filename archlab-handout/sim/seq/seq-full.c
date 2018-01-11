@@ -1,4 +1,4 @@
-char simname[] = "Y86 Processor: seq-std.hcl";
+char simname[] = "Y86 Processor: seq-full.hcl";
 #include <stdio.h>
 #include "isa.h"
 #include "sim.h"

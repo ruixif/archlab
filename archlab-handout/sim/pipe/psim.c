@@ -20,7 +20,7 @@
 #define DEFAULTNAME "Y86 Simulator: "
 
 #ifdef HAS_GUI
-#include <tk.h>
+#include <tcl8.5/tk.h>
 #endif /* HAS_GUI */
 
 #define MAXARGS 128

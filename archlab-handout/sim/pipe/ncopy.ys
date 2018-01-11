@@ -6,7 +6,8 @@
 # Include your name and ID here.
 #
 # Describe how and why you modified the baseline code.
-#
+# 
+# unroll by factor 4
 ##################################################################
 # Do not modify this portion
 # Function prologue.
@@ -24,21 +25,39 @@ ncopy:	pushl %ebp		# Save old frame pointer
 	# Loop header
 	xorl %eax,%eax		# count = 0;
 	andl %edx,%edx		# len <= 0?
-	jle Done		# if so, goto Done:
+	jle Done		    # if so, goto Done:
+    iaddl $-4, %edx     #len = len - 4
+    jl Len_recover
 
-Loop:	mrmovl (%ebx), %esi	# read val from src...
-	rmmovl %esi, (%ecx)	# ...and store it to dst
+Loop:	
+    mrmovl (%ebx), %esi	# read val from src[0]
+    mrmovl 4(%ebx),%edi # read tmp from src[3]
+	rmmovl %esi, (%ecx)	# dest[0] = src[0]
 	andl %esi, %esi		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovl $1, %edi
-	addl %edi, %eax		# count++
-Npos:	irmovl $1, %edi
-	subl %edi, %edx		# len--
-	irmovl $4, %edi
-	addl %edi, %ebx		# src++
-	addl %edi, %ecx		# dst++
+	jle pos1		    # if so, goto pos1:
+	iaddl $1, %eax      # count++
+
+pos1:
+    rmmovl %edi, 4(%ecx)# dest[1] = tmp
+    andl %edi, %edi     # tmp <=0 ?
+    jle pos2
+    iaddl $1, %eax      # count++
+
+pos2:
+    rmmovl 
+
+Len_recover:
+    iaddl $4, $edx      #len = len+4
+
+
+    iaddl $-1, %edx
+	iaddl $4, %ebx		# src++
+	iaddl $4, %ecx		# dst++
 	andl %edx,%edx		# len > 0?
-	jg Loop			# if so, goto Loop:
+	jg Loop			    # if so, goto Loop:
+
+
+
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.

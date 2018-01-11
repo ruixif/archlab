@@ -11,14 +11,20 @@ GUIMODE=-DHAS_GUI
 # to tell gcc which directory to look in. Comment this out if you
 # don't have Tcl/Tk.
 
-TKLIBS=-L/usr/lib -ltk -ltcl
+# Modify the following line so that gcc can find the libtcl.so and
+# libtk.so libraries on your system. You may need to use the -L option
+# to tell gcc which directory to look in. Comment this out if you
+# don't have Tcl/Tk.
+
+TKLIBS=-L/usr/lib -ltk8.5 -ltcl8.5
 
 # Modify the following line so that gcc can find the tcl.h and tk.h
 # header files on your system. Comment this out if you don't have
 # Tcl/Tk.
 
-TKINC=-isystem /usr/include
-
+#TKINC=-isystem /usr/include /usr/include/tcl8.5/tk.h /usr/include/tcl8.5/tcl.h
+TKINC=-I/usr/include/tcl8.5/
+##################################################
 # Modify these two lines to choose your compiler and compile time
 # flags.
 
