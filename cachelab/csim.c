@@ -130,6 +130,17 @@ int main(int argc, char *argv[])
     }
     fclose(fptr);
     printSummary(result_instance->hit, result_instance->miss, result_instance->eviction);
+    
+    for (int i=0; i<S; i++)
+    {
+        for (int j=0; j<(param_instance->E);j++)
+        {
+            free(cache[i][j]);
+        }
+        free(cache[i]);
+    }
+    
+    free(cache);
     return 0;
 }
 
