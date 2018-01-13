@@ -6,52 +6,88 @@
 #include <string.h>
 #include <math.h>
 
+#define BIT 64
+
 //global variable
-int hit = 0;
-int miss = 0;
-int eviction = 0;
 
 
-int handle_arguments(char *argv[], int *s, int *E, int *b, char** t, int argc, int *verbose);
+typedef struct result
+{
+    int hit;
+    int miss;
+    int eviction;
+} RESULT;
+
+typedef struct param
+{
+    int verbose;
+    int s;
+    int E;
+    int b;
+    char* t;
+} PARAM;
+//structures
+typedef struct line
+{
+    unsigned int time;
+    int valid;
+    long long tag;
+} LINE;
+
+
+int handle_arguments(int argc, char *argv[], PARAM *param_instance);
 int printhelp();
-int Load(char* address, int size);
-int Save(char* address, int size);
-int Modify(char* address, int size);
+int Load(char* address, int size, LINE**** workline);
+int Save(char* address, int size, LINE**** workline);
+int Modify(char* address, int size, LINE**** workline);
 int Inst(char* address, int size);
 int mem_parse(char* current_line, char** instruction, char** address, char** size);
-int build_model()
-
 
 
 
 int main(int argc, char *argv[])
 {
-    int verbose = 0;
-    int s = 0;
-    int E = 0;
-    int b = 0;
-    char* t = "tracefile";
+    //initilization, sadly, want to avoid external global variables.
+    RESULT *result_instance = malloc(sizeof(RESULT));
+    result_instance -> hit = 0;
+    result_instance -> miss = 0;
+    result_instance -> eviction = 0;
+    
+    PARAM *param_instance = malloc(sizeof(PARAM));
+    param_instance->verbose = 0;
+    param_instance->s = 0;
+    param_instance->E = 0;
+    param_instance->b = 0;
+    param_instance->t = "tracefile";
     //handle argument
     
-    handle_arguments(argv, &s, &E, &b, &t, argc, &verbose);
+    handle_arguments(argc, argv, param_instance);
     //printf("%d, %d, %d, %s\n", s, E, b, t);
     
     
-    //build a model
+    //initialize the model
+    int S = 1 << (param_instance->s);
+    //int B = 1 << b;
     
+    LINE*** cache = malloc(S * sizeof(LINE**));
+    if (cache == NULL) return -1;
     
-    /*
-    int B = (int) pow(2, b);
-    int S = (int) pow(2, s);
-    int tag = 64 - s - b;
-    printf("%d,%d", B, S);
-    */
+    for (int i=0; i<S; i++)
+    {
+        cache[i] = malloc((param_instance->E) * sizeof(LINE*));
+        if (cache[i] == NULL) return -1;
+        for (int j=0; j<(param_instance->E);j++)
+        {
+            cache[i][j] = malloc(sizeof(LINE));
+            if (cache[i][j] == NULL) return -1;
+            cache[i][j]-> valid = 0;
+        }
+    }
     
-    
-    
+    printf("LINE SIZE%lu\n", sizeof(LINE));
     
     //handle trace
-    FILE *fptr = fopen(t, "r");
+    FILE *fptr = fopen(param_instance->t, "r");
     if (fptr == NULL)
     {
         printf("cannot open file\n");
@@ -70,28 +106,28 @@ int main(int argc, char *argv[])
         mem_parse(current_line, &instruction, &address, &size);
         //memory model
         int size_N = atoi(size);
-        printf("%d", size_N);
+        //printf("%d", size_N);
         switch(instruction[0])
         {
             case 'I':
                 Inst(address, size_N);
                 break;
             case 'L':
-                Load(address, size_N);
+                Load(address, size_N, &cache);
                 break;
             case 'S':
-                Save(address, size_N);
+                Save(address, size_N, &cache);
                 break;
             case 'M':
-                Modify(address, size_N);
+                Modify(address, size_N, &cache);
                 break;
             default:
                 printf("ERROR\n");
         }
     }
     fclose(fptr);
-    printf("%d", verbose);
-    printSummary(hit, miss, eviction);
+    printf("%d, %s", param_instance->s, param_instance->t);
+    printSummary(result_instance->hit, result_instance->miss, result_instance->eviction);
     return 0;
 }
 
@@ -103,22 +139,22 @@ int mem_parse(char* current_line, char** instruction, char** address, char** siz
     return 0;
 }
 
-int Load(char* address, int size)
+int Load(char* address, int size, LINE**** workline)
 {
-    printf("Load\n");
+    
     return 0;
 }
 
-int Save(char* address, int size)
+int Save(char* address, int size, LINE**** workline)
 {
-    printf("Save\n");
+    //printf("Save\n");
     return 0;
 }
 
-int Modify(char* address, int size)
+int Modify(char* address, int size, LINE**** workline)
 {
-    Load(address, size);
-    Save(address, size);
+    Load(address, size, workline);
+    Save(address, size, workline);
     return 0;
 }
 
@@ -131,7 +167,7 @@ int Inst(char* address, int size)
 
 
 
-int handle_arguments(char *argv[], int *s, int *E, int *b, char** t, int argc, int *verbose)
+int handle_arguments(int argc, char *argv[], PARAM *param_instance)
 {
     int h_flag = 0;
     int v_flag = 0;
@@ -210,14 +246,14 @@ int handle_arguments(char *argv[], int *s, int *E, int *b, char** t, int argc, i
         }
         if (v_flag)
         {
-            *verbose = 1;
+            param_instance->verbose = 1;
         }
         if (s_flag*E_flag*b_flag*t_flag)
         {
-            *s = atoi(s_tmp);
-            *E = atoi(E_tmp);
-            *b = atoi(b_tmp);
-            *t = t_tmp;
+            (param_instance)->s = atoi(s_tmp);
+            (param_instance)->E = atoi(E_tmp);
+            (param_instance)->b = atoi(b_tmp);
+            (param_instance)->t = t_tmp;
         }
         else
         {
