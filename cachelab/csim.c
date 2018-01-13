@@ -221,6 +221,81 @@ int Load(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *
 
 int Save(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *result_instance)
 {
+    unsigned long long address_num = (unsigned long long)strtol(address, NULL, 16);
+    printf("address: %llx   ", address_num);
+    unsigned long long b_bit = LAST(address_num, param_instance->b);
+    unsigned long long s_bit = MID(address_num, param_instance->b, param_instance->b + param_instance->s);
+    unsigned long long tag_bit = MID(address_num, (param_instance->b + param_instance->s), BIT);
+    
+    printf("b_bit: %llx  ,s_bit: %llx , tag_bit: %llx ", b_bit, s_bit, tag_bit);
+    int hit_flag = 0;
+    int miss_flag = 0;
+    int evict_flag = 0;
+    int valid_flag = 0;
+    
+    //LINE** current_set = cache[s_bit];
+    //search hit
+    for (int j=0; j<(param_instance->E);j++)
+    {
+        if (cache[s_bit][j]-> valid == 1 && cache[s_bit][j]-> tag == tag_bit)
+        {
+            result_instance-> hit++;
+            cache[s_bit][j]-> time = 0;
+            hit_flag = 1;
+        }
+    }
+    //search invalid
+    if (hit_flag == 0)
+    {
+        result_instance-> miss++;
+        miss_flag = 1;
+        //search invalid
+        for (int j=0; j<(param_instance->E);j++)
+        {
+            if (cache[s_bit][j]->valid == 0)
+            {
+                cache[s_bit][j]->valid = 1;
+                cache[s_bit][j]->tag = tag_bit;
+                cache[s_bit][j]->time = 0;
+                valid_flag = 1;
+                break;
+            }
+        }
+        //search eviction
+        if (valid_flag == 0)
+        {
+            result_instance->eviction++;
+            evict_flag = 1;
+            unsigned int longest_time = cache[s_bit][0]->time;
+            unsigned int current_evict = 0;
+            for (int j=0; j<(param_instance->E);j++)
+            {
+                if (cache[s_bit][j]->time > longest_time)
+                {
+                    longest_time = cache[s_bit][j]->time;
+                    current_evict = j;
+                }
+            }
+            //evict
+            cache[s_bit][current_evict]->tag = tag_bit;
+            cache[s_bit][current_evict]->time = 0;
+        }
+    }
+    //update time
+    int S = 1 << (param_instance->s);
+    for (int i=0; i<S; i++)
+    {
+        for (int j=0; j<(param_instance->E);j++)
+        {
+            cache[i][j]->time++;
+        }
+    }
+    //print single-operation summary
+    if (param_instance->verbose == 1)
+        printf("Save, %s, hit: %d, miss:%d, eviction:%d\n", address ,hit_flag, miss_flag, evict_flag);
+    return 0;
+    
+    
     //printf("Save\n");
     return 0;
 }
