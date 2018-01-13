@@ -7,6 +7,9 @@
 #include <math.h>
 
 #define BIT 64
+#define LAST(k,n) ((k) & ((1<<(n))-1))
+#define MID(k,m,n) LAST((k)>>(m),((n)-(m)))
+#define FRONT(k,n) ((k) >> (BIT-n))   //only for unsigned long long
 
 //global variable
 
@@ -31,15 +34,15 @@ typedef struct line
 {
     unsigned int time;
     int valid;
-    long long tag;
+    unsigned long long tag;
 } LINE;
 
 
 int handle_arguments(int argc, char *argv[], PARAM *param_instance);
 int printhelp();
-int Load(char* address, int size, LINE**** workline);
-int Save(char* address, int size, LINE**** workline);
-int Modify(char* address, int size, LINE**** workline);
+int Load(char* address, int size, LINE*** workline, PARAM *param_instance, RESULT *result_instance);
+int Save(char* address, int size, LINE*** workline,PARAM *param_instance, RESULT *result_instance);
+int Modify(char* address, int size, LINE*** workline, PARAM *param_instance, RESULT *result_instance);
 int Inst(char* address, int size);
 int mem_parse(char* current_line, char** instruction, char** address, char** size);
 
@@ -113,20 +116,19 @@ int main(int argc, char *argv[])
                 Inst(address, size_N);
                 break;
             case 'L':
-                Load(address, size_N, &cache);
+                Load(address, size_N, cache, param_instance, result_instance);
                 break;
             case 'S':
-                Save(address, size_N, &cache);
+                Save(address, size_N, cache, param_instance, result_instance);
                 break;
             case 'M':
-                Modify(address, size_N, &cache);
+                Modify(address, size_N, cache, param_instance, result_instance);
                 break;
             default:
                 printf("ERROR\n");
         }
     }
     fclose(fptr);
-    printf("%d, %s", param_instance->s, param_instance->t);
     printSummary(result_instance->hit, result_instance->miss, result_instance->eviction);
     return 0;
 }
@@ -139,22 +141,92 @@ int mem_parse(char* current_line, char** instruction, char** address, char** siz
     return 0;
 }
 
-int Load(char* address, int size, LINE**** workline)
+int Load(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *result_instance)
 {
+    unsigned long long address_num = (unsigned long long)strtol(address, NULL, 16);
+    unsigned long long b_bit = LAST(address_num, param_instance->b);
+    unsigned long long s_bit = MID(address_num, param_instance->b, param_instance->b + param_instance->s);
+    unsigned long long tag_bit = FRONT(address_num, BIT-(param_instance->b + param_instance->s));
+    int hit_flag = 0;
+    int miss_flag = 0;
+    int evict_flag = 0;
+    int valid_flag = 0;
     
+    LINE** current_set = cache[s_bit];
+    //search hit
+    for (int j=0; j<(param_instance->E);j++)
+    {
+        //check valid bit
+        if (cache[s_bit][j]-> valid == 0) continue;
+        //
+        if (cache[s_bit][j]-> tag == tag_bit)
+        {
+            result_instance-> hit++;
+            cache[s_bit][j]-> time = 0;
+            hit_flag = 1;
+        }
+    }
+    //search eviction
+    if (hit_flag == 0)
+    {
+        result_instance-> miss++;
+        miss_flag = 1;
+        //search invalid
+        for (int j=0; j<(param_instance->E);j++)
+        {
+            if (cache[s_bit][j]->valid == 0)
+            {
+                cache[s_bit][j]->valid = 1;
+                cache[s_bit][j]->tag = tag_bit;
+                cache[s_bit][j]->time = 0;
+                valid_flag = 1;
+                break;
+            }
+        }
+        //search eviction
+        if (valid_flag == 0)
+        {
+            result_instance->eviction++;
+            evict_flag = 1;
+            unsigned int longest_time = cache[s_bit][0]->time;
+            unsigned int current_evict = 0;
+            for (int j=0; j<(param_instance->E);j++)
+            {
+                if (cache[s_bit][j]->time > longest_time)
+                {
+                    longest_time = cache[s_bit][j]->time;
+                    current_evict = j;
+                }
+            }
+            //evict
+            cache[s_bit][current_evict]->tag = tag_bit;
+            cache[s_bit][current_evict]->time = 0;
+        }
+    }
+    //update time
+    int S = 1 << (param_instance->s);
+    for (int i=0; i<S; i++)
+    {
+        for (int j=0; j<(param_instance->E);j++)
+        {
+            cache[i][j]->time++;
+        }
+    }
+    //print single-operation summary
+    printf("Load, %s, hit: %d, miss:%d, eviction:%d", param_instance->t ,hit_flag, miss_flag, evict_flag);
     return 0;
 }
 
-int Save(char* address, int size, LINE**** workline)
+int Save(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *result_instance)
 {
     //printf("Save\n");
     return 0;
 }
 
-int Modify(char* address, int size, LINE**** workline)
+int Modify(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *result_instance)
 {
-    Load(address, size, workline);
-    Save(address, size, workline);
+    Load(address, size, cache, param_instance, result_instance);
+    Save(address, size, cache, param_instance, result_instance);
     return 0;
 }
 
