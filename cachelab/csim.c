@@ -144,29 +144,30 @@ int mem_parse(char* current_line, char** instruction, char** address, char** siz
 int Load(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *result_instance)
 {
     unsigned long long address_num = (unsigned long long)strtol(address, NULL, 16);
+    printf("address: %llx   ", address_num);
     unsigned long long b_bit = LAST(address_num, param_instance->b);
     unsigned long long s_bit = MID(address_num, param_instance->b, param_instance->b + param_instance->s);
-    unsigned long long tag_bit = FRONT(address_num, BIT-(param_instance->b + param_instance->s));
+    unsigned long long tag_bit = MID(address_num, (param_instance->b + param_instance->s), BIT);
+    
+    printf("b_bit: %llx  ,s_bit: %llx , tag_bit: %llx ", b_bit, s_bit, tag_bit);
+    
     int hit_flag = 0;
     int miss_flag = 0;
     int evict_flag = 0;
     int valid_flag = 0;
     
-    LINE** current_set = cache[s_bit];
+    //LINE** current_set = cache[s_bit];
     //search hit
     for (int j=0; j<(param_instance->E);j++)
     {
-        //check valid bit
-        if (cache[s_bit][j]-> valid == 0) continue;
-        //
-        if (cache[s_bit][j]-> tag == tag_bit)
+        if (cache[s_bit][j]-> valid == 1 && cache[s_bit][j]-> tag == tag_bit)
         {
             result_instance-> hit++;
             cache[s_bit][j]-> time = 0;
             hit_flag = 1;
         }
     }
-    //search eviction
+    //search invalid
     if (hit_flag == 0)
     {
         result_instance-> miss++;
@@ -213,7 +214,8 @@ int Load(char* address, int size, LINE*** cache, PARAM *param_instance, RESULT *
         }
     }
     //print single-operation summary
-    printf("Load, %s, hit: %d, miss:%d, eviction:%d", param_instance->t ,hit_flag, miss_flag, evict_flag);
+    if (param_instance->verbose == 1)
+        printf("Load, %s, hit: %d, miss:%d, eviction:%d\n", address ,hit_flag, miss_flag, evict_flag);
     return 0;
 }
 
