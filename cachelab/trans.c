@@ -8,10 +8,13 @@
  * on a 1KB direct mapped cache with a block size of 32 bytes.
  */ 
 #include <stdio.h>
+#include <stdlib.h>
 #include "cachelab.h"
-
+#define BLK 8
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
-
+void transpose_32(int M, int N, int A[N][M], int B[M][N]);
+void transpose_64(int M, int N, int A[N][M], int B[M][N]);
+void transpose_61(int M, int N, int A[N][M], int B[M][N]);
 /* 
  * transpose_submit - This is the solution transpose function that you
  *     will be graded on for Part B of the assignment. Do not change
@@ -22,12 +25,107 @@ int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 char transpose_submit_desc[] = "Transpose submission";
 void transpose_submit(int M, int N, int A[N][M], int B[M][N])
 {
+
+    if (N==32)
+    {
+        transpose_32(M, N, A, B);
+    }
+    else if (N==64)
+    {
+        transpose_64(M, N, A, B);
+    }
+    else if (M==61)
+    {
+        transpose_61(M, N, A, B);
+    }
 }
+
 
 /* 
  * You can define additional transpose functions below. We've defined
  * a simple one below to help you get started. 
- */ 
+*/
+void transpose_32(int M, int N, int A[N][M], int B[M][N])
+{
+    int i, j, k, l;
+    int tmp[BLK];
+    for (i = 0; i < N; i+=BLK)
+    {
+        for (j = 0; j < M; j+=BLK)
+        {
+            for (k=i; k<i+BLK; k++)
+            {
+                for (l=j; l<j+BLK; l++)
+                {
+                    if (k!=l) B[l][k] = A[k][l];
+                    else tmp[l%BLK] = A[l][l];
+                }
+                if (i == j)
+                {
+                    for (l=j; l<j+BLK; l++) {
+                        B[l][l] = tmp[l%BLK];
+                    }
+                }
+
+            }
+        }
+    }
+
+}
+
+
+
+ 
+ 
+char transpose_64_desc[] = "Transpose the 64 x 64 matrix";
+void transpose_64(int M, int N, int A[N][M], int B[M][N])
+{
+    int i, j, k, l;
+    int tmp[BLK];
+    for (i = 0; i < N; i+=BLK)
+    {
+        for (j = 0; j < M; j+=BLK)
+        {
+            for (k=i; k<i+BLK; k++)
+            {
+                for (l=j; l<j+BLK; l++)
+                {
+                    if (k!=l) B[l][k] = A[k][l];
+                    else tmp[l%BLK] = A[l][l];
+                }
+                if (i == j)
+                {
+                    for (l=j; l<j+BLK; l++) {
+                        B[l][l] = tmp[l%BLK];
+                    }
+                }
+
+            }
+        }
+    }
+
+    
+}
+
+
+
+
+char transpose_61_desc[] = "Transpose the 61 x 67 matrix";
+void transpose_61(int M, int N, int A[N][M], int B[M][N])
+{
+    int i, j, tmp;
+
+    for (i = 0; i < N; i++) 
+    {
+        for (j = 0; j < M; j++) 
+        {
+            tmp = A[i][j];
+            B[j][i] = tmp;
+        }
+    }    
+
+}
+
 
 /* 
  * trans - A simple baseline transpose function, not optimized for the cache.
@@ -57,9 +155,10 @@ void registerFunctions()
 {
     /* Register your solution function */
     registerTransFunction(transpose_submit, transpose_submit_desc); 
-
+    //registerTransFunction(transpose_64, transpose_64_desc); 
+    
     /* Register any additional transpose functions */
-    registerTransFunction(trans, trans_desc); 
+    //registerTransFunction(trans, trans_desc); 
 
 }
 

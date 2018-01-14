@@ -169,7 +169,8 @@ void usage(char *argv[]){
     printf("  -h          Print this help message.\n");
     printf("  -M <rows>   Number of matrix rows (max %d)\n", MAXN);
     printf("  -N <cols>   Number of  matrix columns (max %d)\n", MAXN);
-    printf("Example: %s -M 8 -N 8\n", argv[0]);       
+    printf("Example: %s -M 8 -N 8\n", argv[0]);
+    printf("%lu  \n \n \n \n",sizeof(int));
 }
 
 /*
