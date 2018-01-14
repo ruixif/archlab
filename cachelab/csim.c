@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <getopt.h>
 
 #define BIT 64
 #define LAST(k,n) ((k) & ((1<<(n))-1))

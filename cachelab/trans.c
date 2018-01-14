@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include "cachelab.h"
 #define BLK 8
+#define BS 16
+#define CST 8
 int is_transpose(int M, int N, int A[N][M], int B[M][N]);
 void transpose_32(int M, int N, int A[N][M], int B[M][N]);
 void transpose_64(int M, int N, int A[N][M], int B[M][N]);
@@ -34,7 +36,7 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
     {
         transpose_64(M, N, A, B);
     }
-    else if (M==61)
+    else if (N==67)
     {
         transpose_61(M, N, A, B);
     }
@@ -75,36 +77,69 @@ void transpose_32(int M, int N, int A[N][M], int B[M][N])
 
 
 
- 
- 
 char transpose_64_desc[] = "Transpose the 64 x 64 matrix";
 void transpose_64(int M, int N, int A[N][M], int B[M][N])
 {
-    int i, j, k, l;
-    int tmp[BLK];
-    for (i = 0; i < N; i+=BLK)
+    //divide the block by 8x8, then divide the 8x8 block by 4x4
+    int col, row;
+    int k, i;
+    int tmp[8]; //it does not exceeds the number of variables' limit.
+    
+    for (col = 0; col < N; col+=CST) 
     {
-        for (j = 0; j < M; j+=BLK)
+        for (row = 0; row < M; row+=CST)
         {
-            for (k=i; k<i+BLK; k++)
+            //convert a four blk
+            for (k=col; k < col+4; k++)
             {
-                for (l=j; l<j+BLK; l++)
+                for (i=0; i<8; i++)
                 {
-                    if (k!=l) B[l][k] = A[k][l];
-                    else tmp[l%BLK] = A[l][l];
+                    tmp[i] = A[k][row+i];
                 }
-                if (i == j)
+                
+                for (i=0;i<4;i++)
                 {
-                    for (l=j; l<j+BLK; l++) {
-                        B[l][l] = tmp[l%BLK];
-                    }
+                    B[row+i][k] = tmp[i];
+                    B[row+i][k+4] = tmp[i+4];
                 }
-
             }
+            
+            //move a four blk
+            for (i=0;i<8;i++)
+            {
+                tmp[i] = A[col + 4 + i%4][row + ((i<4) ? 4 : 3)];
+            }
+            
+            for (i=0;i<4;i++)
+            {
+                B[row+4][col+i] = B[row+3][col+4+i];
+                B[row+4][4+i] = tmp[i];
+                B[row+3][4+i] = tmp[4+i];
+            }
+            
+            //move the rest
+            for (k=0; k<3; k++)
+            {
+                for (i=0;i<4;i++)
+                {
+                    tmp[i] = A[col+ 4 + i][row+5+k];
+                    tmp[4+i] = A[col + 4 + i][row+k];
+                }
+                
+                for (i=0;i<4;i++)
+                {
+                    B[row+5+k][col+i] = B[row+k][col+4+i];
+                    B[row+5+k][col+4+i] = tmp[i];
+                    B[row+k  ][col+4+i] = tmp[i+4];
+                }
+                
+            }
+            
+            
+
+
         }
     }
-
-    
 }
 
 
@@ -113,16 +148,23 @@ void transpose_64(int M, int N, int A[N][M], int B[M][N])
 char transpose_61_desc[] = "Transpose the 61 x 67 matrix";
 void transpose_61(int M, int N, int A[N][M], int B[M][N])
 {
-    int i, j, tmp;
-
-    for (i = 0; i < N; i++) 
+    
+    int i, j, k, l;
+    
+    for (j = 0; j < M; j+=BS) 
     {
-        for (j = 0; j < M; j++) 
+        for (i = 0; i < N; i+=BS)
         {
-            tmp = A[i][j];
-            B[j][i] = tmp;
+            for (k=i; (k<N) && (k<i+BS); k++)
+            {
+                for (l=j; (l<M) && (l < j+BS); l++)
+                {
+                    B[l][k] = A[k][l];
+                }
+            }
+
         }
-    }    
+    }
 
 }
 
@@ -141,6 +183,7 @@ void trans(int M, int N, int A[N][M], int B[M][N])
             B[j][i] = tmp;
         }
     }    
+
 
 }
 
