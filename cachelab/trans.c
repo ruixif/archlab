@@ -90,31 +90,39 @@ void transpose_64(int M, int N, int A[N][M], int B[M][N])
         for (row = 0; row < M; row+=CST)
         {
             //convert a four blk
-            for (k=col; k < col+4; k++)
+            for (k=0; k < 4; k++)
             {
                 for (i=0; i<8; i++)
                 {
-                    tmp[i] = A[k][row+i];
+                    tmp[i] = A[col+k][row+i];
                 }
+            
+                B[row+0][col+k+0] = tmp[0];
+                B[row+0][col+k+4] = tmp[5];
+                B[row+1][col+k+0] = tmp[1];
+                B[row+1][col+k+4] = tmp[6];
+                B[row+2][col+k+0] = tmp[2];
+                B[row+2][col+k+4] = tmp[7];
+                B[row+3][col+k+0] = tmp[3];
+                B[row+3][col+k+4] = tmp[4];
                 
-                for (i=0;i<4;i++)
-                {
-                    B[row+i][k] = tmp[i];
-                    B[row+i][k+4] = tmp[i+4];
-                }
             }
             
             //move a four blk
-            for (i=0;i<8;i++)
-            {
-                tmp[i] = A[col + 4 + i%4][row + ((i<4) ? 4 : 3)];
-            }
+            tmp[0] = A[col+4][row+4];
+            tmp[1] = A[col+5][row+4];
+            tmp[2] = A[col+6][row+4];
+            tmp[3] = A[col+7][row+4];
+            tmp[4] = A[col+4][row+3];
+            tmp[5] = A[col+5][row+3];
+            tmp[6] = A[col+6][row+3];
+            tmp[7] = A[col+7][row+3];
             
             for (i=0;i<4;i++)
             {
                 B[row+4][col+i] = B[row+3][col+4+i];
-                B[row+4][4+i] = tmp[i];
-                B[row+3][4+i] = tmp[4+i];
+                B[row+4][col+4+i] = tmp[i];
+                B[row+3][col+4+i] = tmp[4+i];
             }
             
             //move the rest
